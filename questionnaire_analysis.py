@@ -78,7 +78,10 @@ print(df2_corr.iloc[0:3,0:3])
 """相关系数分析：投资教育不同的人受双减影响的区别"""
 'See in df2_corr'
 
-"""决策树：各方面->经济回报"""#这决策树没啥用(ˉ▽ˉ；)...
+"""[D]相关系数分析：经济回报与非经济回报"""
+print(df2_corr.iloc[4:6,4:6])
+
+"""[ABCE-D]决策树：各方面->经济回报"""#这决策树没啥用(ˉ▽ˉ；)...
 inv_eco_clf = tree.DecisionTreeClassifier()
 inv_X = df2.drop(columns=["D-经济回报","D-非经济回报"])
 inv_eco_y = df2["D-经济回报"]
@@ -87,14 +90,14 @@ inv_eco_clf = inv_eco_clf.fit(inv_X, inv_eco_y)
 inv_eco_text = tree.export_text(inv_eco_clf)
 print(inv_eco_clf.score(inv_X, inv_eco_y))
 
-"""线性回归：各方面->经济回报"""
+"""[ABCE-D]线性回归：各方面->经济回报"""
 print("-"*20+'\n'+"""线性回归：各方面->经济回报（权重系数）""")
 inv_eco_reg = LinearRegression()
 inv_eco_reg.fit(inv_X, inv_eco_y)
 for i in range(0, inv_X.columns.size):
     print(inv_X.columns[i]+":",inv_eco_reg.coef_[i])
     
-"""线性回归：各方面->其他回报"""
+"""[ABCE-D]线性回归：各方面->其他回报"""
 print("-"*20+'\n'+"""线性回归：各方面->其他回报（权重系数）""")
 inv_eco_reg = LinearRegression()
 inv_eco_reg.fit(inv_X, inv_oth_y)
@@ -112,4 +115,4 @@ ax.pie(df2_soft, labels=df2_soft.index, colors=sns.light_palette("#a275ac"))
 ax2 = fig.add_subplot(222)
 ax2.pie(df2_val, labels=df2_soft.index, colors=sns.light_palette("seagreen"))
 fig.savefig("pies.png")
-"""双减影响"""
+"""[D]密度二维图：经济回报与非经济回报"""

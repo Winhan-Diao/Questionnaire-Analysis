@@ -109,6 +109,7 @@ for i in range(0, inv_X.columns.size):
 """软实力投资差异与教育理念的饼图"""
 df2_soft = df2.loc[..., "B-软实力投资_A":"B-软实力投资_D"].agg('sum')
 df2_val = df2.loc[..., "C-教育理念_A":"C-教育理念_D"].agg('sum')
+<<<<<<< HEAD
 fig = plt.figure(figsize=(15, 30), dpi=500)
 fig.suptitle('上海市居民家庭教育投资状况调查',verticalalignment='center',fontsize=30,y=.93)
 ax = fig.add_subplot(621)
@@ -120,10 +121,24 @@ ax2.set_title('【多选】教育理念比重')
 ax2.pie(df2_val, labels=df2_soft.index, colors=sns.light_palette("seagreen"))
 """[D]密度二维图：经济回报与非经济回报"""
 ax3 = fig.add_subplot(625)
+=======
+fig = plt.figure(figsize=(15, 15), dpi=500)
+fig.suptitle('上海市居民家庭教育投资状况调查',verticalalignment='center',fontsize=30,y=.93)
+ax = fig.add_subplot(321)
+ax.set_title('【多选】软实力投资比重')
+ax.pie(df2_soft, labels=df2_soft.index, colors=sns.light_palette("#a275ac"))
+
+ax2 = fig.add_subplot(322)
+ax2.set_title('【多选】教育理念比重')
+ax2.pie(df2_val, labels=df2_soft.index, colors=sns.light_palette("seagreen"))
+"""[D]密度二维图：经济回报与非经济回报"""
+ax3 = fig.add_subplot(325)
+>>>>>>> 60babbc36208d1aeecf570c903ffa1efcacd8cf0
 ax3.set_title('经济回报与非经济回报比重及相关性比较')
 df_ben=pd.crosstab(index=df2["D-经济回报"], columns=df2["D-非经济回报"])
 sns.heatmap(data=df_ben,linewidth=.5,ax=ax3,cmap=sns.color_palette("blend:#7AB,#EDA", as_cmap=True))
 """[ABCDE]提琴图：各单选题选择比重"""
+<<<<<<< HEAD
 ax4 = fig.add_subplot(6,2,(3,4))
 ax4.set_title('【单选】各题选择比重')
 sns.violinplot(df2.loc[:,:'E-双减X投资--结构'].div([3,4,4,5,5,3,3,3,3]),ax=ax4,palette=sns.color_palette("pastel"),width=.5)
@@ -141,5 +156,11 @@ ax5 = sns.violinplot(df2_com,palette=sns.color_palette("Set2"),fill=False)
 
 
 
+
+=======
+ax4 = fig.add_subplot(3,2,(3,4))
+ax4.set_title('【单选】各题选择比重')
+sns.violinplot(df2.loc[:,:'E-双减X投资--结构'].div([3,4,4,5,5,3,3,3,3]),ax=ax4,palette=sns.color_palette("pastel"),width=.5)
+ax4.grid(True)
 
 fig.savefig("pies.png")

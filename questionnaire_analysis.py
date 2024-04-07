@@ -34,7 +34,7 @@ plt.rcParams['font.sans-serif'] = ['SimHei']
 # =============================================================================
 ####RANDOM DATA GENERATION####
 ##THIS IS NOT USED IN THE REAL ANALYSIS PROCESS##
-np.random.seed(60)
+np.random.seed(6400)
 
 a = np.random.randint(1, 4, (5, 10))
 
@@ -62,7 +62,7 @@ for i in range(0, multiple.size):
         tmp_df.rename(columns=lambda x: df2.columns[i] + '_' + x, inplace=True)
         df2 = pd.concat((df2, tmp_df), axis=1)
     else:
-        df2.iloc[:,i] = df2.iloc[:,i].map({'A':1, 'B':2, 'C':3, 'D':4, 'E':5})
+        df2.iloc[:,i] = df2.iloc[:,i].map(lambda x:selections[i]-(ord(x)-ord('A')))
 for i in range(multiple.size-1, -1, -1):
     if multiple.get(i) == 1:
         df2.drop(df2.columns[i], axis=1, inplace=True)
@@ -109,10 +109,23 @@ for i in range(0, inv_X.columns.size):
 """软实力投资差异与教育理念的饼图"""
 df2_soft = df2.loc[..., "B-软实力投资_A":"B-软实力投资_D"].agg('sum')
 df2_val = df2.loc[..., "C-教育理念_A":"C-教育理念_D"].agg('sum')
-fig = plt.figure(figsize=(10, 10), dpi=500)
-ax = fig.add_subplot(221)
+fig = plt.figure(figsize=(15, 15), dpi=500)
+fig.suptitle('上海市居民家庭教育投资状况调查',verticalalignment='center',fontsize=30,y=.93)
+ax = fig.add_subplot(321)
+ax.set_title('【多选】软实力投资比重')
 ax.pie(df2_soft, labels=df2_soft.index, colors=sns.light_palette("#a275ac"))
-ax2 = fig.add_subplot(222)
+
+ax2 = fig.add_subplot(322)
+ax2.set_title('【多选】教育理念比重')
 ax2.pie(df2_val, labels=df2_soft.index, colors=sns.light_palette("seagreen"))
-fig.savefig("pies.png")
 """[D]密度二维图：经济回报与非经济回报"""
+ax3 = fig.add_subplot(325)
+ax3.set_title('经济回报与非经济回报比重及相关性比较')
+df_ben=pd.crosstab(index=df2["D-经济回报"], columns=df2["D-非经济回报"])
+sns.heatmap(data=df_ben,linewidth=.5,ax=ax3,cmap=sns.color_palette("blend:#7AB,#EDA", as_cmap=True))
+"""[ABCDE]提琴图：各单选题选择比重"""
+ax4 = fig.add_subplot(3,2,(3,4))
+ax4.set_title('【单选】各题选择比重')
+sns.violinplot(df2.loc[:,:'E-双减X投资--结构'].div([3,4,4,5,5,3,3,3,3]),ax=ax4,palette=sns.color_palette("pastel"),width=.5)
+ax4.grid(True)
+fig.savefig("pies.png")

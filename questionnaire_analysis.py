@@ -71,7 +71,7 @@ df3_melt = df3.melt(var_name='k',value_name='v')
 ####DATA ANYLSIS####
 '''所有相关系数(spearman method)'''
 df3_corr = df3_related.corr(method='spearman')
-df3.to_csv("correlation.csv")
+df3_corr.to_csv("correlation.csv")
 # =============================================================================
 ####VISUAL REPORT####
 T = (20,20)

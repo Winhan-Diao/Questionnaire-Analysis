@@ -70,7 +70,7 @@ for i in range(0,df2.shape[1]):
 df3_related = df3.loc[:, related.astype(bool).values].astype(int)
 df3_unrelated = df3.loc[:, ~related.astype(bool).values].astype(int)
 df3 = df3.astype(int)
-df3_melt = df3.melt(var_name='k',value_name='v')
+df3_melt = df3.melt(var_name='k',value_name='程度')
 # =============================================================================
 ####DATA ANYLSIS####
 '''所有相关系数(spearman method)'''
@@ -83,6 +83,12 @@ y = df3["E-非经济回报"]
 reg_noneco = LinearRegression()
 reg_noneco.fit(X, y)
 print(reg_noneco.coef_,reg_noneco.intercept_)
+
+'''Tree dicision for non-eco returns'''
+X_tree = df3.drop(['E-经济回报',"E-非经济回报"],axis=1)
+clf_noneco = tree.DecisionTreeClassifier()
+clf_noneco = clf_noneco.fit(X_tree, y)
+
 # =============================================================================
 ####VISUAL REPORT####
 T = (25,20)
@@ -99,7 +105,7 @@ ax.set_xlabel('所有可量化题目的线性相关系数',fontsize='large')
 '''Violin plot for all choices'''
 ax2 = fig.add_subplot(gs[6:10,:])
 ax2.grid(True)
-ax2 = sns.violinplot(df3_melt, x='k', y='v',palette='Pastel2',width=.8,fill=True,gap=.1,bw_adjust=1)
+ax2 = sns.violinplot(df3_melt, x='k', y='程度',palette='Pastel2',width=.8,fill=True,gap=.1,bw_adjust=1)
 ax2.set_xlabel('所有选项的选择比重',fontsize='large')
 
 '''提琴图：家庭教育素质对投资、回报、双减态度。。。的影响'''
@@ -108,14 +114,14 @@ df_up = df3[(df3["A-家书数"]>=3) & (df3["A-父母教育程度"]>=4)]
 df_low = df3[~((df3["A-家书数"]>=3) & (df3["A-父母教育程度"]>=4))]
 L_up = ['up' for _ in range(df_up.size)]
 L_low = ['low' for _ in range(df_low.size)]
-df_up_melt = df_up.melt(var_name='k',value_name='v')
+df_up_melt = df_up.melt(var_name='k',value_name='程度')
 df_up_melt.insert(2,'education',L_up)
-df_low_melt = df_low.melt(var_name='k',value_name='v')
+df_low_melt = df_low.melt(var_name='k',value_name='程度')
 df_low_melt.insert(2,'education',L_low)
 df_edu_clsf = df_up_melt._append(df_low_melt)
 ax3 = fig.add_subplot(gs[11:15,:])
 ax3.grid(True)
-ax3 = sns.violinplot(df_edu_clsf, x='k', y='v', hue='education',palette='Set2',width=1,fill=False,gap=.1,split=True,bw_adjust=1)
+ax3 = sns.violinplot(df_edu_clsf, x='k', y='程度', hue='education',palette='Set2',width=1,fill=False,gap=.1,split=True,bw_adjust=1)
 ax3.set_xlabel('选项选择比重的差异--家庭教育素质高VS普通',fontsize='large')
 
 '''提琴图：家庭年收入对投资、回报、双减态度。。。的影响'''
@@ -123,22 +129,32 @@ df_wea = df3[df3["A-年收入"]>=3]
 df_poo = df3[~(df3["A-年收入"]>=3)]
 L_wea = ['wealthy' for _ in range(df_wea.size)]
 L_poo = ['poor' for _ in range(df_poo.size)]
-df_wea_melt = df_wea.melt(var_name='k',value_name='v')
+df_wea_melt = df_wea.melt(var_name='k',value_name='程度')
 df_wea_melt.insert(2,'income',L_wea)
-df_poo_melt = df_poo.melt(var_name='k',value_name='v')
+df_poo_melt = df_poo.melt(var_name='k',value_name='程度')
 df_poo_melt.insert(2,'income',L_poo)
 df_inc_clsf = df_wea_melt._append(df_poo_melt)
 ax4 = fig.add_subplot(gs[16:20,:])
 ax4.grid(True)
-ax4 = sns.violinplot(df_inc_clsf, x='k', y='v', hue='income',palette='husl',width=1,fill=False,gap=.1,split=True)
+ax4 = sns.violinplot(df_inc_clsf, x='k', y='程度', hue='income',palette='husl',width=1,fill=False,gap=.1,split=True)
 ax4.set_xlabel('选项选择比重的差异--家庭收入高VS普通',fontsize='large')
 
 '''条形图：各可量化选项对非经济回报的线性相关权重'''
+df_fimp = pd.DataFrame(clf_noneco.feature_importances_,index=X_tree.columns,columns=['决策树权重'])
+df_fimp_melt = df_fimp.melt(var_name='方法',value_name='权重')
+df_fimp_melt['题目'] = df_fimp.index
+df_fcoe = pd.DataFrame(reg_noneco.coef_,index=X.columns,columns=['线性回归系数权重'])
+df_fcoe_melt = df_fcoe.melt(var_name='方法',value_name='权重')
+df_fcoe_melt['题目'] = df_fcoe.index
+df_coim_melt = pd.concat((df_fimp_melt,df_fcoe_melt))
+
 ax5 = fig.add_subplot(gs[21:,:])
 ax5.set_axisbelow(True)
 ax5.grid(True,color='silver')
 ax5.axhline(0, color="k", clip_on=False)
-ax5 = sns.barplot(reg_noneco.coef_,palette='vlag')
-ax5.set_xticklabels(X.columns)
+ax5 = sns.barplot(df_coim_melt, x='题目', y='权重', hue='方法', palette="pastel")
+ax5.bar_label(ax5.containers[0], fmt="{:.2f}".format, fontsize=10)
+ax5.bar_label(ax5.containers[1], fmt="{:.2f}".format, fontsize=10)
+# ax5.set_xticklabels(X.columns)
 ax5.set_xlabel('各可量化选项对非经济回报的线性相关权重',fontsize='large')
 fig.savefig('result.png')

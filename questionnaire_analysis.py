@@ -35,8 +35,12 @@ ax:mpl.axes._axes.Axes
 selections  = pd.Series([4,5,4,3,4,3,3,3,3,2,3,3,3,3])
 needReverse = pd.Series([0,0,0,1,1,1,0,1,0,1,1,1,1,1])
 related     = pd.Series([1,1,1,1,1,1,0,1,0,1,1,1,1,1])
-names = pd.Series(["A-家书数",'A-父母教育程度',"A-年收入",'B-情感投资',"B-时间投资",'B-经济投资',"C-软实力投资",'8.C-软实力投资占比',"D-教育理念",'E-经济回报',"E-非经济回报",'F-双减X投资--态度',"F-双减X投资--成本",'F-双减X投资--结构'])
-plt.rcParams['font.sans-serif'] = ['SimHei']
+names = pd.Series(["A-家书数",'A-父母教育程度',"A-年收入",'B-情感投资',"B-时间投资",'B-经济投资',"C-软实力投资",'C-软实力投资占比',"D-教育理念",'E-经济回报',"E-非经济回报",'F-双减X投资--态度',"F-双减X投资--成本",'F-双减X投资--结构'])
+plt.rcParams['font.sans-serif'] = ['Microsoft YaHei']
+# import matplotlib.font_manager
+# flist = matplotlib.font_manager.findSystemFonts()
+# names = [matplotlib.font_manager.FontProperties(fname=fname).get_name() for fname in flist]
+# print(names)
 # =============================================================================
 ####RANDOM DATA GENERATION####
 ##THIS IS NOT USED IN THE REAL ANALYSIS PROCESS##
@@ -44,7 +48,7 @@ np.random.seed(6400)
 
 a = np.random.randint(1, 4, (5, 10))
 
-random_array = np.array([np.random.randint(1, value+1, (1000, )) for value in selections]).T
+random_array = np.array([np.random.randint(1, value+1, (100, )) for value in selections]).T
 
 df = pd.DataFrame(random_array)
 df = df.replace({1:'A', 2:'B', 3:'C', 4:'D', 5:'E'})
@@ -72,17 +76,31 @@ df3_melt = df3.melt(var_name='k',value_name='v')
 '''所有相关系数(spearman method)'''
 df3_corr = df3_related.corr(method='spearman')
 df3_corr.to_csv("correlation.csv")
+
+'''Linear regression on non-eco returns'''
+X = df3_related.drop(['E-经济回报',"E-非经济回报"],axis=1)
+y = df3["E-非经济回报"]
+reg_noneco = LinearRegression()
+reg_noneco.fit(X, y)
+print(reg_noneco.coef_,reg_noneco.intercept_)
 # =============================================================================
 ####VISUAL REPORT####
-T = (20,20)
+T = (25,20)
 fig = plt.figure(figsize=T,dpi=300)
-fig.suptitle('上海市居民家庭教育投资状况调查',fontsize=60)
+fig.suptitle('上海市居民家庭教育投资状况调查',fontsize=60,verticalalignment='top')
 gs = fig.add_gridspec(*T)
 
+'''HeatMap for all correlations'''
+ax = fig.add_subplot(gs[:5,2:])
+ax = sns.heatmap(df3_corr,annot=True,cmap=sns.color_palette("blend:#7AB,#EDA", as_cmap=True),linewidths=.1)
+ax.tick_params(axis='x',labelsize='x-small',labelrotation=0)
+ax.set_xlabel('所有可量化题目的线性相关系数',fontsize='large')
+
 '''Violin plot for all choices'''
-ax = fig.add_subplot(gs[:3,:])
-ax.grid(True)
-ax = sns.violinplot(df3_melt, x='k', y='v',palette='Pastel2',width=.8,fill=True,gap=.1,bw_adjust=1)
+ax2 = fig.add_subplot(gs[6:10,:])
+ax2.grid(True)
+ax2 = sns.violinplot(df3_melt, x='k', y='v',palette='Pastel2',width=.8,fill=True,gap=.1,bw_adjust=1)
+ax2.set_xlabel('所有选项的选择比重',fontsize='large')
 
 '''提琴图：家庭教育素质对投资、回报、双减态度。。。的影响'''
 '>=200书 && >=12年'
@@ -95,10 +113,10 @@ df_up_melt.insert(2,'education',L_up)
 df_low_melt = df_low.melt(var_name='k',value_name='v')
 df_low_melt.insert(2,'education',L_low)
 df_edu_clsf = df_up_melt._append(df_low_melt)
-ax2 = fig.add_subplot(gs[4:7,:])
-ax2.grid(True)
-ax2 = sns.violinplot(df_edu_clsf, x='k', y='v', hue='education',palette='Set2',width=1,fill=False,gap=.1,split=True,bw_adjust=1)
-
+ax3 = fig.add_subplot(gs[11:15,:])
+ax3.grid(True)
+ax3 = sns.violinplot(df_edu_clsf, x='k', y='v', hue='education',palette='Set2',width=1,fill=False,gap=.1,split=True,bw_adjust=1)
+ax3.set_xlabel('选项选择比重的差异--家庭教育素质高VS普通',fontsize='large')
 
 '''提琴图：家庭年收入对投资、回报、双减态度。。。的影响'''
 df_wea = df3[df3["A-年收入"]>=3]
@@ -110,14 +128,17 @@ df_wea_melt.insert(2,'income',L_wea)
 df_poo_melt = df_poo.melt(var_name='k',value_name='v')
 df_poo_melt.insert(2,'income',L_poo)
 df_inc_clsf = df_wea_melt._append(df_poo_melt)
-ax3 = fig.add_subplot(gs[8:11,:])
-ax3.grid(True)
-ax3 = sns.violinplot(df_inc_clsf, x='k', y='v', hue='income',palette='husl',width=1,fill=False,gap=.1,split=True)
+ax4 = fig.add_subplot(gs[16:20,:])
+ax4.grid(True)
+ax4 = sns.violinplot(df_inc_clsf, x='k', y='v', hue='income',palette='husl',width=1,fill=False,gap=.1,split=True)
+ax4.set_xlabel('选项选择比重的差异--家庭收入高VS普通',fontsize='large')
 
-
-
-
-
-
-
+'''条形图：各可量化选项对非经济回报的线性相关权重'''
+ax5 = fig.add_subplot(gs[21:,:])
+ax5.set_axisbelow(True)
+ax5.grid(True,color='silver')
+ax5.axhline(0, color="k", clip_on=False)
+ax5 = sns.barplot(reg_noneco.coef_,palette='vlag')
+ax5.set_xticklabels(X.columns)
+ax5.set_xlabel('各可量化选项对非经济回报的线性相关权重',fontsize='large')
 fig.savefig('result.png')
